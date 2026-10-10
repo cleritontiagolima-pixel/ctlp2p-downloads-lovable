@@ -1,3 +1,5 @@
+import { translateCategory } from "./ptCategories";
+
 export type Channel = { name: string; url: string; logo?: string | undefined; group: string };
 
 export function parseM3U(text: string): Channel[] {
@@ -11,7 +13,7 @@ export function parseM3U(text: string): Channel[] {
       pending = {
         name: (comma >= 0 ? line.slice(comma + 1) : "").trim() || attr("tvg-name") || "Sem nome",
         logo: attr("tvg-logo") || undefined,
-        group: attr("group-title") || "Geral",
+        group: translateCategory(attr("group-title") || ""),
       };
     } else if (!line.startsWith("#")) {
       out.push({ ...(pending ?? { name: line, group: "Geral" }), url: line });

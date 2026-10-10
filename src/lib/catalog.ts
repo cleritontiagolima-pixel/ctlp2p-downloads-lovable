@@ -1,5 +1,6 @@
 import { fetchText } from "./transport";
 import { parseM3U } from "./m3u";
+import { translateCategory } from "./ptCategories";
 
 export type Section = "live" | "movie" | "series";
 export type Cat = { id: string; name: string };
@@ -48,7 +49,7 @@ export function xtreamCatalog(x: Xtream): Catalog {
     hasEpisodes: true,
     async categories(s) {
       const rows = (await api(catAction[s])) as Row[];
-      return (Array.isArray(rows) ? rows : []).map((r) => ({ id: str(r["category_id"]), name: str(r["category_name"]) }));
+      return (Array.isArray(rows) ? rows : []).map((r) => ({ id: str(r["category_id"]), name: translateCategory(str(r["category_name"])) }));
     },
     async items(s) {
       const rows = (await api(itemAction[s])) as Row[];
