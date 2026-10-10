@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+# Precisa de contents: write para publicar a release com o APK.
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -32,3 +36,21 @@ jobs:
         with:
           name: CTL-P2P-REVENDA-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+      # RELEASE SEMPRE ATUALIZADA: o artifact do Actions expira e exige login
+        # para baixar; a release dá link público estável
+        # (releases/latest/download/...) que o painel e o WhatsApp usam.
+        # Upload com --clobber troca o binário SEM janela sem release.
+      - name: Publicar release latest com o APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk ctlp2p-revenda.apk
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest ctlp2p-revenda.apk --clobber
+            gh release edit latest --latest --title "CTL P2P REVENDA — build ${{ github.run_number }}" --notes "Build automático do workflow android-apk (commit ${{ github.sha }})."
+          else
+            gh release create latest ctlp2p-revenda.apk \
+              --latest \
+              --title "CTL P2P REVENDA — build ${{ github.run_number }}" \
+              --notes "Build automático do workflow android-apk (commit ${{ github.sha }})."
+          fi
