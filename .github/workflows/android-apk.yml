@@ -28,7 +28,7 @@ jobs:
           sed -i 's|<activity|<activity android:screenOrientation="sensorLandscape"|' $M
           bun add -d @capacitor/assets
           mkdir -p assets && cp public/favicon.png assets/icon.png
-          curl -sL "$(node -e "console.log('https://project--b6ed6360-0672-4234-b0b7-7c29158047c6.lovable.app'+require('./src/assets/logo.jpg.asset.json').url)")" -o assets/icon.png || true
+          curl -sL "$(node -e "console.log('https://ctlrevenda.lovable.app'+require('./src/assets/logo.jpg.asset.json').url)")" -o assets/icon.png || true
           bunx capacitor-assets generate --android --iconBackgroundColor '#020617' || true
       - run: bunx cap sync android
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug

@@ -7,7 +7,9 @@ const config: CapacitorConfig = {
   appName: "CTL P2P REVENDA",
   webDir: "capacitor-www",
   server: {
-    url: "https://project--b6ed6360-0672-4234-b0b7-7c29158047c6.lovable.app",
+    // Published domain: the project-- preview URL returns 403 to the device,
+    // which is what broke loading on installed APKs.
+    url: "https://ctlrevenda.lovable.app",
     cleartext: true,
     androidScheme: "https",
   },
