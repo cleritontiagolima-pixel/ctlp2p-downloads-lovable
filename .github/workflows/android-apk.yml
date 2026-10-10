@@ -18,6 +18,16 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: "21" }
       - run: bun install
+      # GATE: os testes incluem capacitor-config.test.ts, que falha se a WebView
+      # apontar para outra URL que não o domínio publicado (a preview retorna 403).
+      - run: bun run test
+      # GATE: o domínio publicado precisa responder 200, senão todo APK novo
+      # sairia quebrado igual à última vez (403 no aparelho).
+      - name: Verificar app publicado responde 200
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 -A "Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36" https://ctlrevenda.lovable.app/)
+          echo "ctlrevenda.lovable.app → $code"
+          test "$code" = "200"
       - run: bunx cap add android
       - name: Ícone, TV (Android TV / Fire TV) e conexões http
         run: |
