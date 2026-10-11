@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
-import { playableUrl, isHlsUrl } from "@/lib/stream-url";
+import { ArrowLeft } from "lucide-react";
+import { playbackPlan } from "@/lib/stream-url";
 import { isNativeApp } from "@/lib/transport";
 import { isBackKey } from "@/lib/remote";
 
@@ -12,39 +13,55 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
   const [status, setStatus] = useState("");
 
+  const [round, setRound] = useState(0);
+  const failed = status === "Conteúdo indisponível no momento.";
+  const failedRef = useRef(false);
+  failedRef.current = failed;
+
   useEffect(() => {
     const v = ref.current;
     if (!v || !src) return;
     let hls: Hls | null = null;
-    let retries = 0;
+    let step = 0;
+    let dead = false;
     let stall: ReturnType<typeof setTimeout> | undefined;
     let openTimer: ReturnType<typeof setTimeout> | undefined;
-    const url = playableUrl(src, location.protocol === "https:", isNativeApp());
-    const retry = () => {
-      if (retries++ < 5) { setStatus("Reconectando..."); setTimeout(start, 800 * retries); }
-      else setStatus("Conteúdo indisponível no momento.");
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const native = isNativeApp();
+    const plan = playbackPlan(src, location.protocol === "https:", native, !!v.canPlayType("application/vnd.apple.mpegurl"));
+    // Each way of playing gets two tries before moving on to the next one.
+    const total = plan.length * 2;
+    const fail = () => {
+      if (dead) return;
+      clearTimeout(openTimer); clearTimeout(retryTimer);
+      step++;
+      if (step < total) { setStatus("Reconectando..."); retryTimer = setTimeout(start, 700); }
+      else { hls?.destroy(); hls = null; setStatus("Conteúdo indisponível no momento."); }
     };
     const start = () => {
-      setStatus("Carregando...");
-      hls?.destroy();
+      if (dead) return;
+      const a = plan[step % plan.length]!;
+      setStatus(step ? "Reconectando..." : "Carregando...");
+      hls?.destroy(); hls = null;
+      v.removeAttribute("src"); v.load();
       clearTimeout(openTimer);
-      openTimer = setTimeout(() => { if (v.readyState < 3) retry(); }, 15000);
-      if (isHlsUrl(url) && Hls.isSupported()) {
+      openTimer = setTimeout(() => { if (v.readyState < 3) fail(); }, 15000);
+      if (a.engine === "hls" && Hls.isSupported()) {
         hls = new Hls({
           enableWorker: true, startLevel: 0, startFragPrefetch: true, capLevelToPlayerSize: true,
           abrEwmaDefaultEstimate: 500_000, maxBufferLength: live ? 30 : 60, maxMaxBufferLength: 120,
           backBufferLength: 15, liveSyncDurationCount: 3, liveMaxLatencyDurationCount: 8,
-          manifestLoadingTimeOut: 10000, manifestLoadingMaxRetry: 4, levelLoadingMaxRetry: 6,
-          fragLoadingTimeOut: 20000, fragLoadingMaxRetry: 8, fragLoadingRetryDelay: 500, nudgeMaxRetry: 10,
+          manifestLoadingTimeOut: 10000, manifestLoadingMaxRetry: 2, levelLoadingMaxRetry: 4,
+          fragLoadingTimeOut: 20000, fragLoadingMaxRetry: 6, fragLoadingRetryDelay: 500, nudgeMaxRetry: 10,
         });
+        let mediaRecover = 0;
         hls.on(Hls.Events.ERROR, (_e, d) => {
           if (!d.fatal) return;
-          if (d.type === Hls.ErrorTypes.MEDIA_ERROR) hls?.recoverMediaError(); else retry();
+          if (d.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRecover++ < 2) hls?.recoverMediaError(); else fail();
         });
-        hls.on(Hls.Events.FRAG_BUFFERED, () => { retries = 0; });
-        hls.loadSource(url);
+        hls.loadSource(a.url);
         hls.attachMedia(v);
-      } else v.src = url;
+      } else v.src = a.url;
       v.play().catch(() => {});
     };
     const onWaiting = () => {
@@ -56,19 +73,22 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
       }, 6000);
     };
     const onPlaying = () => { clearTimeout(stall); clearTimeout(openTimer); setStatus(""); };
+    const onError = () => { if (!hls) fail(); };
     v.addEventListener("waiting", onWaiting);
     v.addEventListener("playing", onPlaying);
-    v.addEventListener("error", retry);
+    v.addEventListener("error", onError);
     start();
     return () => {
-      clearTimeout(stall); clearTimeout(openTimer);
+      dead = true;
+      clearTimeout(stall); clearTimeout(openTimer); clearTimeout(retryTimer);
       v.removeEventListener("waiting", onWaiting);
       v.removeEventListener("playing", onPlaying);
-      v.removeEventListener("error", retry);
+      v.removeEventListener("error", onError);
       hls?.destroy();
       v.removeAttribute("src");
+      v.load();
     };
-  }, [src, live]);
+  }, [src, live, round]);
 
   useEffect(() => {
     if (!full) return;
@@ -76,7 +96,10 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
       const v = ref.current;
       if (!v) return;
       if (isBackKey(e, false)) { e.preventDefault(); e.stopImmediatePropagation(); onClose?.(); return; }
-      if (e.key === "Enter" || e.key === " " || e.key === "MediaPlayPause") { e.preventDefault(); e.stopImmediatePropagation(); if (v.paused) v.play(); else v.pause(); }
+      if (e.key === "Enter" || e.key === " " || e.key === "MediaPlayPause") {
+        e.preventDefault(); e.stopImmediatePropagation();
+        if (failedRef.current) setRound((r) => r + 1); else if (v.paused) v.play(); else v.pause();
+      }
       else if (!live && e.key === "ArrowRight") { e.preventDefault(); e.stopImmediatePropagation(); v.currentTime += 10; }
       else if (!live && e.key === "ArrowLeft") { e.preventDefault(); e.stopImmediatePropagation(); v.currentTime -= 10; }
       else if (e.key.startsWith("Arrow")) { e.preventDefault(); e.stopImmediatePropagation(); }
@@ -88,10 +111,22 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
   return (
     <div className={full ? "fixed inset-0 z-50 bg-background" : "relative aspect-video w-full overflow-hidden rounded-xl bg-muted"}>
       <video ref={ref} controls={full} playsInline autoPlay className="h-full w-full bg-background object-contain" />
-      {full && <div className="pointer-events-none absolute left-0 top-0 p-6 text-lg font-semibold text-foreground drop-shadow">{title}</div>}
+      {full && (
+        <div className="absolute left-0 top-0 flex items-center gap-4 p-4">
+          <button onClick={onClose} className="flex items-center gap-2 rounded-full bg-background/80 px-5 py-2 text-sm font-bold text-foreground outline-none focus:ring-4 focus:ring-primary">
+            <ArrowLeft className="h-4 w-4" /> Voltar
+          </button>
+          <span className="pointer-events-none text-lg font-semibold text-foreground drop-shadow">{title}</span>
+        </div>
+      )}
       {status && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-6 text-center">
-          <span className="rounded-full bg-background/80 px-4 py-2 text-sm text-primary">{status}</span>
+        <div className="absolute inset-x-0 bottom-6 flex flex-col items-center gap-3 text-center">
+          <span className="pointer-events-none rounded-full bg-background/80 px-4 py-2 text-sm text-primary">{status}</span>
+          {failed && (
+            <button onClick={() => setRound((r) => r + 1)} className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">
+              Tentar novamente
+            </button>
+          )}
         </div>
       )}
     </div>

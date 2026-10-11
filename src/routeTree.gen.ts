@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicActivateRouteImport } from './routes/api/public/activate'
+import { Route as ApiPublicDiagnoseRouteImport } from './routes/api/public/diagnose'
 import { Route as ApiPublicPlaylistRouteImport } from './routes/api/public/playlist'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const ApiPublicActivateRoute = ApiPublicActivateRouteImport.update({
   id: '/api/public/activate',
   path: '/api/public/activate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicDiagnoseRoute = ApiPublicDiagnoseRouteImport.update({
+  id: '/api/public/diagnose',
+  path: '/api/public/diagnose',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPlaylistRoute = ApiPublicPlaylistRouteImport.update({
@@ -38,12 +44,14 @@ const ApiPublicStreamRoute = ApiPublicStreamRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/activate': typeof ApiPublicActivateRoute
+  '/api/public/diagnose': typeof ApiPublicDiagnoseRoute
   '/api/public/playlist': typeof ApiPublicPlaylistRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/activate': typeof ApiPublicActivateRoute
+  '/api/public/diagnose': typeof ApiPublicDiagnoseRoute
   '/api/public/playlist': typeof ApiPublicPlaylistRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
 }
@@ -51,20 +59,30 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/activate': typeof ApiPublicActivateRoute
+  '/api/public/diagnose': typeof ApiPublicDiagnoseRoute
   '/api/public/playlist': typeof ApiPublicPlaylistRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/api/public/activate' | '/api/public/playlist' | '/api/public/stream'
+    | '/'
+    | '/api/public/activate'
+    | '/api/public/diagnose'
+    | '/api/public/playlist'
+    | '/api/public/stream'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/api/public/activate' | '/api/public/playlist' | '/api/public/stream'
+    | '/'
+    | '/api/public/activate'
+    | '/api/public/diagnose'
+    | '/api/public/playlist'
+    | '/api/public/stream'
   id:
     | '__root__'
     | '/'
     | '/api/public/activate'
+    | '/api/public/diagnose'
     | '/api/public/playlist'
     | '/api/public/stream'
   fileRoutesById: FileRoutesById
@@ -72,6 +90,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicActivateRoute: typeof ApiPublicActivateRoute
+  ApiPublicDiagnoseRoute: typeof ApiPublicDiagnoseRoute
   ApiPublicPlaylistRoute: typeof ApiPublicPlaylistRoute
   ApiPublicStreamRoute: typeof ApiPublicStreamRoute
 }
@@ -90,6 +109,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/activate'
       fullPath: '/api/public/activate'
       preLoaderRoute: typeof ApiPublicActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/diagnose': {
+      id: '/api/public/diagnose'
+      path: '/api/public/diagnose'
+      fullPath: '/api/public/diagnose'
+      preLoaderRoute: typeof ApiPublicDiagnoseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/playlist': {
@@ -112,6 +138,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicActivateRoute: ApiPublicActivateRoute,
+  ApiPublicDiagnoseRoute: ApiPublicDiagnoseRoute,
   ApiPublicPlaylistRoute: ApiPublicPlaylistRoute,
   ApiPublicStreamRoute: ApiPublicStreamRoute,
 }

@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Tv, Film, Clapperboard, ArrowLeft, House } from "lucide-react";
+import { Tv, Film, Clapperboard, LifeBuoy, ArrowLeft, House } from "lucide-react";
 import { getDeviceMac } from "@/lib/device";
 import { fetchText } from "@/lib/transport";
 import { m3uCatalog, xtreamCatalog, type Catalog, type Xtream } from "@/lib/catalog";
 import { focusFirst, useBack, useRemoteNavigation } from "@/lib/remote";
 import { LiveView, PosterView } from "@/components/tv/Browse";
+import { SupportView } from "@/components/tv/Support";
 import logo from "@/assets/logo.jpg.asset.json";
 import fundo from "@/assets/fundo.jpg.asset.json";
 
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/")({
 });
 
 type Activation = { active: boolean; url?: string; xtream?: Xtream | null; expires?: string | null; error?: string };
-type Screen = "home" | "live" | "movie" | "series";
+type Screen = "home" | "live" | "movie" | "series" | "support";
 
 function Index() {
   useRemoteNavigation();
@@ -73,6 +74,7 @@ function Index() {
         {screen === "live" && <LiveView catalog={catalog} onBack={back} />}
         {screen === "movie" && <PosterView key="movie" catalog={catalog} section="movie" onBack={back} />}
         {screen === "series" && <PosterView key="series" catalog={catalog} section="series" onBack={back} />}
+        {screen === "support" && <SupportView onBack={back} />}
       </div>
     </main>
   );
@@ -119,6 +121,7 @@ const TILES = [
   { id: "live", label: "TV AO VIVO", Icon: Tv },
   { id: "movie", label: "FILMES", Icon: Film },
   { id: "series", label: "SÉRIES", Icon: Clapperboard },
+  { id: "support", label: "SUPORTE", Icon: LifeBuoy },
 ] as const;
 
 function Home({ mac, expires, onOpen }: { mac: string; expires: string | null; onOpen: (s: Screen) => void }) {

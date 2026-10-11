@@ -56,8 +56,15 @@ export function useRemoteNavigation() {
       e.preventDefault();
       moveFocus(dir);
     };
+    // Android phones/TV boxes: the system Back button navigates WebView history
+    // instead of sending a key. Keep one guard entry so Back lands here and runs
+    // the current screen's back action instead of closing the app.
+    const guard = () => history.pushState({ ctlBack: true }, "", location.href);
+    const pop = () => { backStack[backStack.length - 1]?.current(); guard(); };
+    guard();
     window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
+    window.addEventListener("popstate", pop);
+    return () => { window.removeEventListener("keydown", h); window.removeEventListener("popstate", pop); };
   }, []);
 }
 

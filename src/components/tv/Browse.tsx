@@ -148,7 +148,7 @@ export function PosterView({ catalog, section, onBack }: { catalog: Catalog; sec
   const [series, setSeries] = useState<Item | null>(null);
   useBack(() => (playing ? setPlaying(null) : series ? setSeries(null) : onBack()));
 
-  if (series) return <EpisodesView catalog={catalog} series={series} playing={playing} setPlaying={setPlaying} />;
+  if (series) return <EpisodesView catalog={catalog} series={series} playing={playing} setPlaying={setPlaying} onBack={() => setSeries(null)} />;
 
   const open = (i: Item) => {
     if (section === "series" && catalog.hasEpisodes) setSeries(i);
@@ -179,8 +179,8 @@ export function PosterView({ catalog, section, onBack }: { catalog: Catalog; sec
   );
 }
 
-function EpisodesView({ catalog, series, playing, setPlaying }: {
-  catalog: Catalog; series: Item; playing: { url: string; title: string } | null; setPlaying: (p: { url: string; title: string } | null) => void;
+function EpisodesView({ catalog, series, playing, setPlaying, onBack }: {
+  onBack: () => void; catalog: Catalog; series: Item; playing: { url: string; title: string } | null; setPlaying: (p: { url: string; title: string } | null) => void;
 }) {
   const eps = useLoad(() => catalog.episodes(series.id), [catalog, series.id]);
   const seasons = useMemo(() => Array.from(new Set((eps.data ?? []).map((e) => e.season))), [eps.data]);
@@ -190,6 +190,7 @@ function EpisodesView({ catalog, series, playing, setPlaying }: {
   const list: Episode[] = (eps.data ?? []).filter((e) => e.season === cur);
   return (
     <div className="flex h-full flex-col overflow-y-auto p-8">
+      <button data-nav onClick={onBack} className={`mb-5 self-start rounded-full bg-card px-5 py-2 text-sm font-bold ${navCls}`}>← Voltar para as séries</button>
       <div className="flex gap-6">
         {series.icon && <img src={series.icon} alt="" className="h-60 w-40 rounded-xl object-cover" />}
         <div>
