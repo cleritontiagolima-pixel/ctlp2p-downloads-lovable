@@ -49,12 +49,33 @@ const DICT: Record<string, string> = {
   "crime": "Policial", "mystery": "Mistério", "biography": "Biografia",
 };
 
+Object.assign(DICT, {
+  // Espanhol
+  "deportes": "Esportes", "deportes ppv": "Esportes PPV", "noticias": "Notícias", "notícias": "Notícias",
+  "peliculas": "Filmes", "películas": "Filmes", "peliculas y series": "Filmes e Séries", "películas y series": "Filmes e Séries",
+  "infantiles": "Infantil", "infantil": "Infantil", "documentales": "Documentários", "variedades": "Variedades",
+  "entretenimiento": "Entretenimento", "entretenimento y musica": "Entretenimento e Música", "entretenimiento y musica": "Entretenimento e Música",
+  "entretenimento y música": "Entretenimento e Música", "entretenimiento y música": "Entretenimento e Música",
+  "musica": "Música", "música": "Música", "24h": "24 Horas", "nba": "NBA",
+  "camaras": "Câmeras", "cámaras": "Câmeras",
+  // Países
+  "usa": "EUA", "us": "EUA", "eua": "EUA", "france": "França", "spain": "Espanha", "españa": "Espanha",
+  "uk": "Reino Unido", "mexico": "México", "méxico": "México", "italy": "Itália", "italia": "Itália",
+  "germany": "Alemanha", "canada": "Canadá", "colombia": "Colômbia", "argentina": "Argentina", "chile": "Chile", "portugal": "Portugal",
+});
+
+// "Canales|Deportes" (Spanish lists) and "Channels|USA" get a clear PT prefix.
+const PREFIX: Record<string, string> = { canales: "Latinos", channels: "Internacional", canal: "Internacional" };
+
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
 /** Traduz group-title mantendo separadores (",", ";", "|", "/"). */
 export function translateCategory(raw: string): string {
   const value = (raw ?? "").trim();
   if (!value) return "Geral";
+  const m = /^\s*([^|;,/]+?)\s*[|]\s*(.+)$/.exec(value);
+  const pre = m ? PREFIX[norm(m[1]!)] : undefined;
+  if (m && pre) return `${pre} | ${translateCategory(m[2]!)}`;
   // Preserva separadores compostos, traduzindo cada pedaço.
   return value
     .split(/([,;|/])/)

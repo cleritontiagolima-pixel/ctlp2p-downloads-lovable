@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Tv, Film, Clapperboard, LifeBuoy, ArrowLeft, House } from "lucide-react";
 import { getDeviceMac } from "@/lib/device";
 import { fetchText } from "@/lib/transport";
+import { organized } from "@/lib/organize";
 import { m3uCatalog, xtreamCatalog, type Catalog, type Xtream } from "@/lib/catalog";
 import { focusFirst, useBack, useRemoteNavigation } from "@/lib/remote";
 import { LiveView, PosterView } from "@/components/tv/Browse";
@@ -45,10 +46,10 @@ function Index() {
         const a = (await (await fetch(`/api/public/activate?mac=${encodeURIComponent(m)}`)).json()) as Activation;
         if (a.active) {
           setExpires(a.expires ?? null);
-          if (a.xtream) { setCatalog(xtreamCatalog(a.xtream)); return; }
+          if (a.xtream) { setCatalog(organized(xtreamCatalog(a.xtream))); return; }
           setMsg("Carregando lista...");
           const text = await fetchText(a.url!);
-          if (text.includes("#EXTINF")) { setCatalog(m3uCatalog(text)); return; }
+          if (text.includes("#EXTINF")) { setCatalog(organized(m3uCatalog(text))); return; }
           setMsg("A lista liberada está vazia ou inválida.");
         } else setMsg(a.error ?? "Aguardando liberação no painel");
       } catch (e) { setMsg(e instanceof Error ? e.message : "Sem conexão. Tentando novamente..."); }
