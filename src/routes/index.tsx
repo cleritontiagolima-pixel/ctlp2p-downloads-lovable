@@ -37,12 +37,12 @@ function Index() {
   const [screen, setScreen] = useState<Screen>("home");
 
   useEffect(() => {
-    const m = getDeviceMac();
-    setMac(m);
+    let m = "";
     let stop = false;
     let timer: ReturnType<typeof setTimeout>;
     const check = async () => {
       try {
+        if (!m) { m = await getDeviceMac(); setMac(m); }
         const a = (await (await fetch(`/api/public/activate?mac=${encodeURIComponent(m)}`)).json()) as Activation;
         if (a.active) {
           setExpires(a.expires ?? null);

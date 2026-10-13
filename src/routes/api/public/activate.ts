@@ -7,7 +7,7 @@ const MESSAGES: Record<string, string> = {
   inactive: "Assinatura inativa",
   blocked: "Aparelho bloqueado",
   expired: "Assinatura vencida",
-  out_of_scope: "MAC cadastrado em outro aplicativo",
+  out_of_scope: "Este MAC foi cadastrado no painel em outro aplicativo. Cadastre-o no aplicativo CTL P2P REVENDA (terceiro1).",
   device_conflict: "MAC já está em uso em outro aparelho",
   device_in_use: "MAC já está em uso em outro aparelho",
 };
