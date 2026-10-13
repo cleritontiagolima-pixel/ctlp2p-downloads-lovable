@@ -17,21 +17,33 @@ function nativeHttp(): NativeHttp | undefined {
 
 export const isNativeApp = () => !!nativeHttp();
 
+// Weak connections drop big downloads: give each try a long time and retry.
+const TRIES = 3;
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export async function fetchText(url: string): Promise<string> {
+  let last: unknown;
+  for (let i = 0; i < TRIES; i++) {
+    try { return await fetchOnce(url); } catch (e) { last = e; if (i < TRIES - 1) await wait(1500 * (i + 1)); }
+  }
+  throw last instanceof Error && !/^Servidor respondeu/.test(last.message) ? last : new Error("Internet lenta ou instável. Tentando de novo em instantes...");
+}
+
+async function fetchOnce(url: string): Promise<string> {
   const n = nativeHttp();
   if (n) {
-    const r = await n.get({ url, responseType: "text" });
+    const r = await n.get({ url, responseType: "text", connectTimeout: 20000, readTimeout: 90000 } as { url: string; responseType?: string });
     if (r.status >= 200 && r.status < 300) return typeof r.data === "string" ? r.data : JSON.stringify(r.data);
     throw new Error(`Servidor respondeu ${r.status}`);
   }
   const blocked = location.protocol === "https:" && url.startsWith("http://");
   if (!blocked) {
     try {
-      const r = await fetch(url);
+      const r = await fetch(url, { signal: AbortSignal.timeout(90000) });
       if (r.ok) return await r.text();
     } catch { /* CORS or network — try relay */ }
   }
-  const r = await fetch(`/api/public/playlist?url=${encodeURIComponent(url)}`);
+  const r = await fetch(`/api/public/playlist?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(90000) });
   const text = await r.text();
   if (!r.ok || /^\s*</.test(text)) throw new Error(friendly(r.ok ? 200 : r.status, text));
   return text;

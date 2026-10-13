@@ -21,7 +21,7 @@ function useLoad<T>(fn: () => Promise<T>, deps: unknown[]) {
 }
 
 function Status({ loading, error, retry }: { loading: boolean; error?: string | undefined; retry?: (() => void) | undefined }) {
-  if (loading) return <p className="p-6 text-muted-foreground">Carregando...</p>;
+  if (loading) return <p className="p-6 text-sm text-muted-foreground">Carregando... Na primeira vez pode demorar um pouco; depois abre na hora.</p>;
   if (error)
     return (
       <div className="p-6">

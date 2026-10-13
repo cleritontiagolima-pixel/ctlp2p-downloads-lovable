@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Tv, Film, Clapperboard, LifeBuoy, ArrowLeft, House } from "lucide-react";
 import { getDeviceMac } from "@/lib/device";
 import { fetchText } from "@/lib/transport";
+import { cached } from "@/lib/cache";
 import { organized } from "@/lib/organize";
 import { m3uCatalog, xtreamCatalog, type Catalog, type Xtream } from "@/lib/catalog";
 import { focusFirst, useBack, useRemoteNavigation } from "@/lib/remote";
@@ -26,6 +27,17 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+// Starts downloading channels, movies and series one after another while the
+// customer is still on the home screen, so each menu opens already loaded.
+function preload(c: Catalog): Catalog {
+  void (async () => {
+    for (const sec of ["live", "movie", "series"] as const) {
+      await Promise.all([c.categories(sec), c.items(sec)]).catch(() => {});
+    }
+  })();
+  return c;
+}
+
 type Activation = { active: boolean; url?: string; xtream?: Xtream | null; expires?: string | null; error?: string };
 type Screen = "home" | "live" | "movie" | "series" | "support";
 
@@ -47,10 +59,10 @@ function Index() {
         const a = (await (await fetch(`/api/public/activate?mac=${encodeURIComponent(m)}`)).json()) as Activation;
         if (a.active) {
           setExpires(a.expires ?? null);
-          if (a.xtream) { setCatalog(organized(xtreamCatalog(a.xtream))); return; }
+          if (a.xtream) { setCatalog(preload(organized(xtreamCatalog(a.xtream)))); return; }
           setMsg("Carregando lista...");
-          const text = await fetchText(a.url!);
-          if (text.includes("#EXTINF")) { setCatalog(organized(m3uCatalog(text))); return; }
+          const text = await cached(`m3u:${a.url}`, () => fetchText(a.url!));
+          if (text.includes("#EXTINF")) { setCatalog(preload(organized(m3uCatalog(text)))); return; }
           setMsg("A lista liberada está vazia ou inválida.");
         } else setMsg(a.error ?? "Aguardando liberação no painel");
       } catch (e) { setMsg(e instanceof Error ? e.message : "Sem conexão. Tentando novamente..."); }

@@ -1,6 +1,7 @@
 import { fetchText } from "./transport";
 import { parseM3U } from "./m3u";
 import { translateCategory } from "./ptCategories";
+import { cached } from "./cache";
 
 export type Section = "live" | "movie" | "series";
 export type Cat = { id: string; name: string };
@@ -40,8 +41,9 @@ export function xtreamCatalog(x: Xtream): Catalog {
   const base = x.server.replace(/\/+$/, "");
   const u = encodeURIComponent(x.username), p = encodeURIComponent(x.password);
   const api = memo(async (q: string) => {
-    const text = await fetchText(`${base}/player_api.php?username=${u}&password=${p}&action=${q}`);
-    return JSON.parse(text) as unknown;
+    const load = async () => JSON.parse(await fetchText(`${base}/player_api.php?username=${u}&password=${p}&action=${q}`)) as unknown;
+    // Program guide changes all the time; the big lists are kept on the device.
+    return q.startsWith("get_short_epg") ? load() : cached(`x:${base}:${x.username}:${q}`, load);
   });
   const catAction = { live: "get_live_categories", movie: "get_vod_categories", series: "get_series_categories" };
   const itemAction = { live: "get_live_streams", movie: "get_vod_streams", series: "get_series" };
