@@ -35,7 +35,7 @@ jobs:
           sed -i 's|<application|<application android:usesCleartextTraffic="true" android:banner="@mipmap/ic_launcher"|' $M
           sed -i 's|<category android:name="android.intent.category.LAUNCHER" />|<category android:name="android.intent.category.LAUNCHER" /><category android:name="android.intent.category.LEANBACK_LAUNCHER" />|' $M
           sed -i 's|</manifest>|<uses-feature android:name="android.software.leanback" android:required="false" /><uses-feature android:name="android.hardware.touchscreen" android:required="false" /></manifest>|' $M
-          sed -i 's|<activity|<activity android:screenOrientation="sensorLandscape"|' $M
+          sed -i 's|<activity|<activity android:screenOrientation="fullUser"|' $M
           bun add -d @capacitor/assets
           mkdir -p assets && cp public/favicon.png assets/icon.png
           curl -sL "$(node -e "console.log('https://ctlrevenda.lovable.app'+require('./src/assets/logo.jpg.asset.json').url)")" -o assets/icon.png || true
