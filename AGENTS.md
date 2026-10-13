@@ -14,3 +14,4 @@
 - Catalog/list data loads through src/lib/transport.ts (native HTTP in the APK, then direct fetch, then server relay). Why: IPTV servers block datacenter IPs, so requests must come from the customer's device.
 - TV remote navigation uses [data-nav] elements plus useBack() from src/lib/remote.ts. Why: one spatial-focus system works with every remote model.
 - The APK is a Capacitor shell that opens the published app URL, built by .github/workflows/android-apk.yml. Why: no Android SDK in the editor, and web updates reach installed devices without reinstalling.
+- APK updates: every build is signed with one fixed key (GitHub secrets ANDROID_KEYSTORE_*) and numbered with the build number; the app compares it with version.json in the latest release and asks to update. Why: Android only installs an update over the old app when the signature matches.

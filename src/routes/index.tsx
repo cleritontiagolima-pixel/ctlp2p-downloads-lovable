@@ -8,6 +8,7 @@ import { m3uCatalog, xtreamCatalog, type Catalog, type Xtream } from "@/lib/cata
 import { focusFirst, useBack, useRemoteNavigation } from "@/lib/remote";
 import { LiveView, PosterView } from "@/components/tv/Browse";
 import { SupportView } from "@/components/tv/Support";
+import { UpdatePrompt } from "@/components/tv/UpdatePrompt";
 import logo from "@/assets/logo.jpg.asset.json";
 import fundo from "@/assets/fundo.jpg.asset.json";
 
@@ -59,18 +60,20 @@ function Index() {
     return () => { stop = true; clearTimeout(timer); };
   }, []);
 
-  if (!catalog) return <ActivationScreen mac={mac} msg={msg} />;
+  if (!catalog) return <><ActivationScreen mac={mac} msg={msg} /><UpdatePrompt /></>;
 
   const back = () => { setScreen("home"); };
   if (screen === "home")
     return (
       <main className="dark h-[100dvh] overflow-hidden bg-background text-foreground">
         <Home mac={mac} expires={expires} onOpen={setScreen} />
+        <UpdatePrompt />
       </main>
     );
   return (
     <main className="dark flex h-[100dvh] flex-col overflow-hidden bg-background text-foreground">
       <TopNav screen={screen} onOpen={setScreen} />
+      <UpdatePrompt />
       <div className="min-h-0 flex-1">
         {screen === "live" && <LiveView catalog={catalog} onBack={back} />}
         {screen === "movie" && <PosterView key="movie" catalog={catalog} section="movie" onBack={back} />}
@@ -104,13 +107,17 @@ function TopNav({ screen, onOpen }: { screen: Screen; onOpen: (s: Screen) => voi
 
 function ActivationScreen({ mac, msg }: { mac: string; msg: string }) {
   return (
-    <main className="dark relative flex h-[100dvh] items-center justify-center overflow-y-auto bg-background p-3 text-foreground sm:p-6 md:justify-end md:p-[5vw]">
+    <main className="dark relative flex h-[100dvh] w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-background px-4 py-3 text-foreground sm:p-6 md:justify-end md:p-[5vw]">
       <img src={fundo.url} alt="" className="fixed inset-0 h-full w-full object-cover" />
-      <div className="relative my-auto w-full max-w-md rounded-3xl border border-primary/40 bg-background/70 p-[clamp(1rem,4vmin,2rem)] text-center shadow-2xl backdrop-blur-md">
+      <div className="relative mx-auto my-auto w-full max-w-md overflow-hidden rounded-3xl md:mx-0 border border-primary/40 bg-background/70 p-[clamp(1rem,4vmin,2rem)] text-center shadow-2xl backdrop-blur-md">
         <img src={logo.url} alt="CTL P2P REVENDA" className="mx-auto h-[clamp(4rem,18vmin,7rem)] w-[clamp(4rem,18vmin,7rem)] rounded-2xl object-cover md:hidden" />
         <h1 className="mt-2 text-[clamp(1.1rem,4.5vmin,1.5rem)] font-extrabold tracking-wide">CTL P2P REVENDA</h1>
         <p className="mt-[clamp(0.5rem,3vmin,1.5rem)] text-xs uppercase tracking-[0.3em] text-muted-foreground">Endereço MAC</p>
-        <p className="mt-2 whitespace-nowrap font-mono text-[clamp(1.1rem,min(6.5vw,7vmin),2.25rem)] font-bold text-primary">{mac || "—"}</p>
+        {/* SVG text always shrinks to fit the card, whatever the phone's font size */}
+        <svg viewBox="0 0 300 36" role="img" aria-label={mac || "—"} className="mx-auto mt-2 block w-[88%] max-w-[22rem]">
+          <text x="150" y="27" textAnchor="middle" textLength={mac ? 296 : undefined} lengthAdjust="spacingAndGlyphs"
+            className="fill-primary font-mono font-bold" style={{ fontSize: 28 }}>{mac || "—"}</text>
+        </svg>
         <p className="mt-[clamp(0.5rem,3vmin,1.5rem)] text-sm text-muted-foreground">{msg}</p>
         <div className="mx-auto mt-3 h-1 w-24 animate-pulse rounded-full bg-primary" />
       </div>

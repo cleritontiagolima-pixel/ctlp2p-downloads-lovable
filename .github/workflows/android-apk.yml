@@ -41,7 +41,25 @@ jobs:
           curl -sL "$(node -e "console.log('https://ctlrevenda.lovable.app'+require('./src/assets/logo.jpg.asset.json').url)")" -o assets/icon.png || true
           bunx capacitor-assets generate --android --iconBackgroundColor '#020617' || true
       - run: bunx cap sync android
+      # Número da build = versionCode, para o app saber se existe versão nova.
+      - name: Versão do APK
+        run: |
+          sed -i -E "s/versionCode [0-9]+/versionCode ${{ github.run_number }}/; s/versionName \"[^\"]*\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
+          grep -E "versionCode|versionName" android/app/build.gradle
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      # ASSINATURA FIXA: sem a mesma chave em toda build, o Android recusa
+      # instalar a atualização por cima e o cliente teria que desinstalar.
+      - name: Assinar com a chave fixa
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          test -n "$KS_B64"
+          echo "$KS_B64" | base64 -d > ks.p12
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          $BT/apksigner sign --ks ks.p12 --ks-type PKCS12 --ks-pass env:KS_PASS --ks-key-alias ctl android/app/build/outputs/apk/debug/app-debug.apk
+          $BT/apksigner verify android/app/build/outputs/apk/debug/app-debug.apk
+          rm ks.p12
       - uses: actions/upload-artifact@v4
         with:
           name: CTL-P2P-REVENDA-apk
@@ -55,11 +73,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk ctlp2p-revenda.apk
+          echo '{"build": ${{ github.run_number }}}' > version.json
           if gh release view latest >/dev/null 2>&1; then
-            gh release upload latest ctlp2p-revenda.apk --clobber
+            gh release upload latest ctlp2p-revenda.apk version.json --clobber
             gh release edit latest --latest --title "CTL P2P REVENDA — build ${{ github.run_number }}" --notes "Build automático do workflow android-apk (commit ${{ github.sha }})."
           else
-            gh release create latest ctlp2p-revenda.apk \
+            gh release create latest ctlp2p-revenda.apk version.json \
               --latest \
               --title "CTL P2P REVENDA — build ${{ github.run_number }}" \
               --notes "Build automático do workflow android-apk (commit ${{ github.sha }})."

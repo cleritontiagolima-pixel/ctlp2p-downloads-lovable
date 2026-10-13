@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicActivateRouteImport } from './routes/api/public/activate'
+import { Route as ApiPublicAppVersionRouteImport } from './routes/api/public/app-version'
 import { Route as ApiPublicDiagnoseRouteImport } from './routes/api/public/diagnose'
 import { Route as ApiPublicPlaylistRouteImport } from './routes/api/public/playlist'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const ApiPublicActivateRoute = ApiPublicActivateRouteImport.update({
   id: '/api/public/activate',
   path: '/api/public/activate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAppVersionRoute = ApiPublicAppVersionRouteImport.update({
+  id: '/api/public/app-version',
+  path: '/api/public/app-version',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicDiagnoseRoute = ApiPublicDiagnoseRouteImport.update({
@@ -44,6 +50,7 @@ const ApiPublicStreamRoute = ApiPublicStreamRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/activate': typeof ApiPublicActivateRoute
+  '/api/public/app-version': typeof ApiPublicAppVersionRoute
   '/api/public/diagnose': typeof ApiPublicDiagnoseRoute
   '/api/public/playlist': typeof ApiPublicPlaylistRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/activate': typeof ApiPublicActivateRoute
+  '/api/public/app-version': typeof ApiPublicAppVersionRoute
   '/api/public/diagnose': typeof ApiPublicDiagnoseRoute
   '/api/public/playlist': typeof ApiPublicPlaylistRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
@@ -59,6 +67,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/activate': typeof ApiPublicActivateRoute
+  '/api/public/app-version': typeof ApiPublicAppVersionRoute
   '/api/public/diagnose': typeof ApiPublicDiagnoseRoute
   '/api/public/playlist': typeof ApiPublicPlaylistRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
@@ -68,6 +77,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/api/public/activate'
+    | '/api/public/app-version'
     | '/api/public/diagnose'
     | '/api/public/playlist'
     | '/api/public/stream'
@@ -75,6 +85,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/api/public/activate'
+    | '/api/public/app-version'
     | '/api/public/diagnose'
     | '/api/public/playlist'
     | '/api/public/stream'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/api/public/activate'
+    | '/api/public/app-version'
     | '/api/public/diagnose'
     | '/api/public/playlist'
     | '/api/public/stream'
@@ -90,6 +102,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicActivateRoute: typeof ApiPublicActivateRoute
+  ApiPublicAppVersionRoute: typeof ApiPublicAppVersionRoute
   ApiPublicDiagnoseRoute: typeof ApiPublicDiagnoseRoute
   ApiPublicPlaylistRoute: typeof ApiPublicPlaylistRoute
   ApiPublicStreamRoute: typeof ApiPublicStreamRoute
@@ -109,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/activate'
       fullPath: '/api/public/activate'
       preLoaderRoute: typeof ApiPublicActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/app-version': {
+      id: '/api/public/app-version'
+      path: '/api/public/app-version'
+      fullPath: '/api/public/app-version'
+      preLoaderRoute: typeof ApiPublicAppVersionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/diagnose': {
@@ -138,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicActivateRoute: ApiPublicActivateRoute,
+  ApiPublicAppVersionRoute: ApiPublicAppVersionRoute,
   ApiPublicDiagnoseRoute: ApiPublicDiagnoseRoute,
   ApiPublicPlaylistRoute: ApiPublicPlaylistRoute,
   ApiPublicStreamRoute: ApiPublicStreamRoute,
