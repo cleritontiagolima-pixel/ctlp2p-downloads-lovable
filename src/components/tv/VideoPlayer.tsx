@@ -116,7 +116,7 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
           <button onClick={onClose} className="flex items-center gap-2 rounded-full bg-background/80 px-5 py-2 text-sm font-bold text-foreground outline-none focus:ring-4 focus:ring-primary">
             <ArrowLeft className="h-4 w-4" /> Voltar
           </button>
-          <span className="pointer-events-none text-lg font-semibold text-foreground drop-shadow">{title}</span>
+          <span className="pointer-events-none truncate text-sm font-semibold sm:text-lg text-foreground drop-shadow">{title}</span>
         </div>
       )}
       {status && (

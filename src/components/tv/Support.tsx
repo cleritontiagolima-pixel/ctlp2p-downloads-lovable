@@ -50,7 +50,7 @@ export function SupportView({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="mx-auto flex h-full max-w-3xl flex-col gap-4 overflow-y-auto p-6">
+    <div className="mx-auto flex h-full max-w-3xl flex-col gap-4 overflow-y-auto p-[3vmin]">
       <h2 className="text-2xl font-extrabold tracking-wide">Suporte de reprodução</h2>
       <p className="text-sm text-muted-foreground">Descreva o problema (ex.: "canal trava a cada 10 segundos no Wi-Fi") e receba as causas prováveis e como resolver.</p>
       <textarea ref={ref} data-nav value={text} onChange={(e) => setText(e.target.value)} maxLength={1500} rows={4}

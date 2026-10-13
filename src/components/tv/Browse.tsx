@@ -34,12 +34,12 @@ function Status({ loading, error, retry }: { loading: boolean; error?: string | 
 
 function Categories({ cats, count, value, onChange, title }: { cats: Cat[]; count: Map<string, number>; value: string; onChange: (id: string) => void; title: string }) {
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-card/80">
-      <h2 className="px-5 py-4 text-sm font-bold uppercase tracking-widest text-primary">{title}</h2>
+    <aside className="flex w-[24vw] min-w-36 max-w-64 shrink-0 flex-col border-r border-border bg-card/80 portrait:max-h-[28%] portrait:w-full portrait:max-w-none portrait:border-b portrait:border-r-0">
+      <h2 className="px-4 py-2 text-xs font-bold sm:px-5 sm:py-4 sm:text-sm uppercase tracking-widest text-primary">{title}</h2>
       <div className="flex-1 overflow-y-auto px-3 pb-4">
         {[{ id: ALL, name: "Todos" }, ...cats].map((c) => (
           <button key={c.id} data-nav onClick={() => onChange(c.id)} onFocus={() => onChange(c.id)}
-            className={`mb-1 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm ${navCls} ${c.id === value ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
+            className={`mb-1 flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs sm:py-2.5 sm:text-sm ${navCls} ${c.id === value ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
             <span className="truncate">{c.name}</span>
             <span className="ml-2 text-xs opacity-70">{c.id === ALL ? count.get(ALL) ?? 0 : count.get(c.id) ?? 0}</span>
           </button>
@@ -88,25 +88,25 @@ export function LiveView({ catalog, onBack }: { catalog: Catalog; onBack: () => 
   const onAir = epg.find((p) => p.start <= now && p.end > now);
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full portrait:flex-col">
       <Categories title="TV ao vivo" cats={s.cats.data ?? []} count={s.count} value={s.cat} onChange={s.setCat} />
-      <section className="flex w-96 shrink-0 flex-col border-r border-border">
+      <section className="flex w-[32vw] min-w-48 max-w-96 shrink-0 flex-col border-r border-border portrait:min-h-0 portrait:w-full portrait:max-w-none portrait:flex-1 portrait:border-r-0">
         <input data-nav value={s.q} onChange={(e) => s.setQ(e.target.value)} placeholder="Buscar canal..."
-          className={`m-3 rounded-lg border border-input bg-background px-4 py-2.5 text-sm ${navCls}`} />
+          className={`m-2 rounded-lg border border-input bg-background px-3 py-2 text-sm sm:m-3 sm:px-4 sm:py-2.5 ${navCls}`} />
         <Status loading={s.items.loading} error={s.items.error} retry={s.items.retry} />
         <div className="flex-1 overflow-y-auto px-3 pb-4">
           {s.visible.slice(0, 400).map((c, i) => (
             <button key={c.id} data-nav
               onClick={() => (current?.id === c.id ? setFull(true) : setCurrent(c))}
               className={`mb-1 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm ${navCls} ${current?.id === c.id ? "bg-accent" : "hover:bg-accent/60"}`}>
-              <span className="w-8 text-right text-xs text-muted-foreground">{i + 1}</span>
-              {c.icon ? <img src={c.icon} alt="" loading="lazy" className="h-9 w-12 rounded object-contain" /> : <div className="h-9 w-12 rounded bg-muted" />}
+              <span className="w-6 shrink-0 text-right text-xs text-muted-foreground sm:w-8">{i + 1}</span>
+              {c.icon ? <img src={c.icon} alt="" loading="lazy" className="h-8 w-10 shrink-0 rounded object-contain sm:h-9 sm:w-12" /> : <div className="h-8 w-10 shrink-0 rounded bg-muted sm:h-9 sm:w-12" />}
               <span className="truncate">{c.name}</span>
             </button>
           ))}
         </div>
       </section>
-      <section className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
+      <section className="flex min-w-0 flex-1 flex-col gap-3 overflow-y-auto p-[2vmin] portrait:order-first portrait:flex-none">
         {current ? (
           <VideoPlayer src={catalog.liveUrl(current)} title={current.name} live full={full} onClose={() => setFull(false)} />
         ) : (
@@ -114,11 +114,11 @@ export function LiveView({ catalog, onBack }: { catalog: Catalog; onBack: () => 
         )}
         {current && (
           <div>
-            <h3 className="text-xl font-bold">{current.name}</h3>
+            <h3 className="truncate text-base font-bold sm:text-xl">{current.name}</h3>
             <p className="text-xs text-muted-foreground">OK novamente para tela cheia</p>
           </div>
         )}
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border bg-card p-4 portrait:hidden">
           <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-primary">Guia de programação</h4>
           {!current && <p className="text-sm text-muted-foreground">Selecione um canal para ver a programação.</p>}
           {current && !epg.length && <p className="text-sm text-muted-foreground">Sem guia disponível para este canal.</p>}
@@ -156,19 +156,19 @@ export function PosterView({ catalog, section, onBack }: { catalog: Catalog; sec
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full portrait:flex-col">
       <Categories title={section === "movie" ? "Filmes" : "Séries"} cats={s.cats.data ?? []} count={s.count} value={s.cat} onChange={s.setCat} />
-      <section className="flex flex-1 flex-col">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col">
         <input data-nav value={s.q} onChange={(e) => s.setQ(e.target.value)} placeholder="Buscar..."
-          className={`m-4 max-w-md rounded-lg border border-input bg-background px-4 py-2.5 text-sm ${navCls}`} />
+          className={`m-2 max-w-md rounded-lg border border-input bg-background px-3 py-2 text-sm sm:m-4 sm:px-4 sm:py-2.5 ${navCls}`} />
         <Status loading={s.items.loading} error={s.items.error} retry={s.items.retry} />
-        <div className="grid flex-1 auto-rows-max grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4 overflow-y-auto px-4 pb-6">
+        <div className="grid flex-1 auto-rows-max grid-cols-[repeat(auto-fill,minmax(min(150px,28vw),1fr))] gap-[2vmin] overflow-y-auto px-[2vmin] pb-6">
           {s.visible.slice(0, 300).map((i) => (
             <button key={i.id} data-nav onClick={() => open(i)} className={`group rounded-xl text-left ${navCls}`}>
               <div className="aspect-[2/3] overflow-hidden rounded-xl bg-muted">
                 {i.icon && <img src={i.icon} alt="" loading="lazy" className="h-full w-full object-cover" />}
               </div>
-              <p className="mt-2 line-clamp-2 text-sm">{i.name}</p>
+              <p className="mt-1 line-clamp-2 text-xs sm:mt-2 sm:text-sm">{i.name}</p>
               {i.rating && i.rating !== "0" && <p className="text-xs text-primary">★ {i.rating}</p>}
             </button>
           ))}
@@ -189,13 +189,13 @@ function EpisodesView({ catalog, series, playing, setPlaying, onBack }: {
   useEffect(() => { if (!eps.loading) focusFirst(); }, [eps.loading]);
   const list: Episode[] = (eps.data ?? []).filter((e) => e.season === cur);
   return (
-    <div className="flex h-full flex-col overflow-y-auto p-8">
+    <div className="flex h-full flex-col overflow-y-auto p-[3vmin]">
       <button data-nav onClick={onBack} className={`mb-5 self-start rounded-full bg-card px-5 py-2 text-sm font-bold ${navCls}`}>← Voltar para as séries</button>
-      <div className="flex gap-6">
-        {series.icon && <img src={series.icon} alt="" className="h-60 w-40 rounded-xl object-cover" />}
+      <div className="flex gap-[3vmin]">
+        {series.icon && <img src={series.icon} alt="" className="h-[clamp(9rem,35vmin,15rem)] w-[clamp(6rem,23vmin,10rem)] shrink-0 rounded-xl object-cover" />}
         <div>
-          <h2 className="text-3xl font-bold">{series.name}</h2>
-          {series.plot && <p className="mt-3 max-w-2xl text-sm text-muted-foreground">{series.plot}</p>}
+          <h2 className="text-[clamp(1.1rem,5vmin,1.875rem)] font-bold">{series.name}</h2>
+          {series.plot && <p className="mt-3 line-clamp-4 max-w-2xl text-xs sm:text-sm text-muted-foreground">{series.plot}</p>}
           <div className="mt-5 flex flex-wrap gap-2">
             {seasons.map((s) => (
               <button key={s} data-nav onClick={() => setSeason(s)} onFocus={() => setSeason(s)}
@@ -207,7 +207,7 @@ function EpisodesView({ catalog, series, playing, setPlaying, onBack }: {
         </div>
       </div>
       <Status loading={eps.loading} error={eps.error} retry={eps.retry} />
-      <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
+      <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(min(260px,80vw),1fr))] gap-3">
         {list.map((e) => (
           <button key={e.id} data-nav onClick={() => setPlaying({ url: catalog.episodeUrl(e), title: `${series.name} - ${e.title}` })}
             className={`flex items-center gap-3 rounded-xl bg-card p-3 text-left ${navCls}`}>

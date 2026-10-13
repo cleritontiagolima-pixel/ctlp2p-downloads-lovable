@@ -64,12 +64,12 @@ function Index() {
   const back = () => { setScreen("home"); };
   if (screen === "home")
     return (
-      <main className="dark h-screen overflow-hidden bg-background text-foreground">
+      <main className="dark h-[100dvh] overflow-hidden bg-background text-foreground">
         <Home mac={mac} expires={expires} onOpen={setScreen} />
       </main>
     );
   return (
-    <main className="dark flex h-screen flex-col overflow-hidden bg-background text-foreground">
+    <main className="dark flex h-[100dvh] flex-col overflow-hidden bg-background text-foreground">
       <TopNav screen={screen} onOpen={setScreen} />
       <div className="min-h-0 flex-1">
         {screen === "live" && <LiveView catalog={catalog} onBack={back} />}
@@ -82,13 +82,13 @@ function Index() {
 }
 
 function TopNav({ screen, onOpen }: { screen: Screen; onOpen: (s: Screen) => void }) {
-  const tab = "flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold tracking-wide outline-none transition focus:ring-4 focus:ring-primary";
+  const tab = "flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-xs sm:px-5 sm:py-2 sm:text-sm font-bold tracking-wide outline-none transition focus:ring-4 focus:ring-primary";
   return (
-    <nav className="flex shrink-0 items-center gap-2 border-b border-border bg-card px-4 py-2">
+    <nav className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border bg-card px-2 py-1.5 sm:gap-2 sm:px-4 sm:py-2">
       <button data-nav onClick={() => onOpen("home")} className={`${tab} hover:bg-accent`}>
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
-      <img src={logo.url} alt="" className="mx-2 h-9 w-9 rounded-lg object-cover" />
+      <img src={logo.url} alt="" className="mx-1 hidden h-9 w-9 shrink-0 rounded-lg object-cover sm:block" />
       <button data-nav onClick={() => onOpen("home")} className={`${tab} hover:bg-accent`}>
         <House className="h-4 w-4" /> Início
       </button>
@@ -104,14 +104,14 @@ function TopNav({ screen, onOpen }: { screen: Screen; onOpen: (s: Screen) => voi
 
 function ActivationScreen({ mac, msg }: { mac: string; msg: string }) {
   return (
-    <main className="dark relative flex min-h-screen items-center justify-end overflow-hidden bg-background p-6 text-foreground md:p-16">
-      <img src={fundo.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      <div className="relative w-full max-w-md rounded-3xl border border-primary/40 bg-background/70 p-8 text-center shadow-2xl backdrop-blur-md">
-        <img src={logo.url} alt="CTL P2P REVENDA" className="mx-auto h-28 w-28 rounded-2xl object-cover md:hidden" />
-        <h1 className="mt-2 text-2xl font-extrabold tracking-wide">CTL P2P REVENDA</h1>
-        <p className="mt-6 text-xs uppercase tracking-[0.3em] text-muted-foreground">Endereço MAC</p>
-        <p className="mt-2 font-mono text-3xl font-bold tracking-wider text-primary md:text-4xl">{mac || "—"}</p>
-        <p className="mt-6 text-sm text-muted-foreground">{msg}</p>
+    <main className="dark relative flex h-[100dvh] items-center justify-center overflow-y-auto bg-background p-3 text-foreground sm:p-6 md:justify-end md:p-[5vw]">
+      <img src={fundo.url} alt="" className="fixed inset-0 h-full w-full object-cover" />
+      <div className="relative my-auto w-full max-w-md rounded-3xl border border-primary/40 bg-background/70 p-[clamp(1rem,4vmin,2rem)] text-center shadow-2xl backdrop-blur-md">
+        <img src={logo.url} alt="CTL P2P REVENDA" className="mx-auto h-[clamp(4rem,18vmin,7rem)] w-[clamp(4rem,18vmin,7rem)] rounded-2xl object-cover md:hidden" />
+        <h1 className="mt-2 text-[clamp(1.1rem,4.5vmin,1.5rem)] font-extrabold tracking-wide">CTL P2P REVENDA</h1>
+        <p className="mt-[clamp(0.5rem,3vmin,1.5rem)] text-xs uppercase tracking-[0.3em] text-muted-foreground">Endereço MAC</p>
+        <p className="mt-2 whitespace-nowrap font-mono text-[clamp(1.1rem,min(6.5vw,7vmin),2.25rem)] font-bold text-primary">{mac || "—"}</p>
+        <p className="mt-[clamp(0.5rem,3vmin,1.5rem)] text-sm text-muted-foreground">{msg}</p>
         <div className="mx-auto mt-3 h-1 w-24 animate-pulse rounded-full bg-primary" />
       </div>
     </main>
@@ -139,26 +139,26 @@ function Home({ mac, expires, onOpen }: { mac: string; expires: string | null; o
     <div className="relative flex h-full flex-col">
       <img src={fundo.url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-      <header className="relative flex items-center justify-between px-10 py-6">
+      <header className="relative flex items-center justify-between gap-3 px-[4vw] py-[3vmin]">
         <div className="flex items-center gap-4">
-          <img src={logo.url} alt="CTL P2P REVENDA" className="h-14 w-14 rounded-xl object-cover" />
-          <span className="text-xl font-extrabold tracking-wide">CTL P2P REVENDA</span>
+          <img src={logo.url} alt="CTL P2P REVENDA" className="h-[clamp(2.5rem,9vmin,3.5rem)] w-[clamp(2.5rem,9vmin,3.5rem)] shrink-0 rounded-xl object-cover" />
+          <span className="text-[clamp(0.95rem,3vmin,1.25rem)] font-extrabold tracking-wide">CTL P2P REVENDA</span>
         </div>
-        <div className="text-right text-sm">
+        <div className="text-right text-xs sm:text-sm">
           <p className="capitalize">{clock}</p>
           <p className="font-mono text-xs text-muted-foreground">MAC {mac}{expires ? ` • Válido até ${new Date(expires).toLocaleDateString("pt-BR")}` : ""}</p>
         </div>
       </header>
-      <div className="relative flex flex-1 items-center justify-center gap-8 px-10">
+      <div className="relative grid min-h-0 flex-1 grid-cols-2 content-center justify-items-center gap-[3vmin] px-[4vw] landscape:grid-cols-4">
         {TILES.map(({ id, label, Icon }) => (
           <button key={id} data-nav onClick={() => onOpen(id)}
-            className="flex aspect-[4/3] w-full max-w-xs flex-col items-center justify-center gap-5 rounded-3xl border border-primary/30 bg-card/70 backdrop-blur outline-none transition hover:border-primary focus:scale-105 focus:border-primary focus:bg-primary/20 focus:ring-4 focus:ring-primary">
-            <Icon className="h-20 w-20 text-primary" strokeWidth={1.5} />
-            <span className="text-2xl font-extrabold tracking-widest">{label}</span>
+            className="flex aspect-[4/3] w-full max-w-xs flex-col items-center justify-center gap-[2vmin] rounded-3xl landscape:max-h-[55vh] portrait:max-h-[30vh] border border-primary/30 bg-card/70 backdrop-blur outline-none transition hover:border-primary focus:scale-105 focus:border-primary focus:bg-primary/20 focus:ring-4 focus:ring-primary">
+            <Icon className="h-[clamp(2rem,11vmin,5rem)] w-[clamp(2rem,11vmin,5rem)] text-primary" strokeWidth={1.5} />
+            <span className="px-2 text-center text-[clamp(0.8rem,3.5vmin,1.5rem)] font-extrabold tracking-widest">{label}</span>
           </button>
         ))}
       </div>
-      <p className="relative pb-6 text-center text-xs text-muted-foreground">Use as setas do controle para navegar e OK para escolher</p>
+      <p className="relative hidden pb-[3vmin] text-center text-xs sm:block text-muted-foreground">Use as setas do controle para navegar e OK para escolher</p>
     </div>
   );
 }
