@@ -25,7 +25,10 @@ describe("playbackPlan", () => {
   it("in the app, movies play directly in the video element", () => {
     expect(playbackPlan("http://s.com/movie/u/p/9.mkv", true, true, false)).toEqual([{ url: "http://s.com/movie/u/p/9.mkv", engine: "element" }]);
   });
-  it("in the browser, http live goes through the relay with hls.js", () => {
-    expect(playbackPlan("http://s.com/x.m3u8", true, false, false)).toEqual([{ url: "/api/public/stream?url=http%3A%2F%2Fs.com%2Fx.m3u8", engine: "hls" }]);
+  it("in the browser, http live tries the server over https first, then the relay", () => {
+    expect(playbackPlan("http://s.com/x.m3u8", true, false, false)).toEqual([
+      { url: "https://s.com/x.m3u8", engine: "hls" },
+      { url: "/api/public/stream?url=http%3A%2F%2Fs.com%2Fx.m3u8", engine: "hls" },
+    ]);
   });
 });
