@@ -9,6 +9,8 @@ export const Route = createFileRoute("/api/public/stream")({
         const target = new URL(request.url).searchParams.get("url") ?? "";
         if (!/^https?:\/\//i.test(target)) return new Response("URL inválida", { status: 400 });
         const r = await fetch(target, { headers: { "User-Agent": "CTL-P2P-REVENDA/1.0" }, redirect: "follow" });
+        // Refusals ("Access denied") must not be rewritten as if they were a playlist.
+        if (!r.ok) return new Response("Indisponível", { status: r.status, headers: { "Cache-Control": "no-store" } });
         const type = r.headers.get("content-type") ?? "";
         const base = r.url || target;
         if (/mpegurl/i.test(type) || /\.m3u8(\?|$)/i.test(base)) {
