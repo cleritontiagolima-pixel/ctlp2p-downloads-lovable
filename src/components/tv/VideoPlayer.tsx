@@ -122,6 +122,11 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
       {status && (
         <div className="absolute inset-x-0 bottom-6 flex flex-col items-center gap-3 text-center">
           <span className="pointer-events-none rounded-full bg-background/80 px-4 py-2 text-sm text-primary">{status}</span>
+          {failed && !isNativeApp() && (
+            <span className="pointer-events-none max-w-md rounded-xl bg-background/80 px-4 py-2 text-xs text-muted-foreground">
+              Alguns servidores não liberam canais no navegador do computador. No app CTL P2P REVENDA (celular, TV ou TV box) o canal abre normalmente.
+            </span>
+          )}
           {failed && (
             <button onClick={() => setRound((r) => r + 1)} className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">
               Tentar novamente
