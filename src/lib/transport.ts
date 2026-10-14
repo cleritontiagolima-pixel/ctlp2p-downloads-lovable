@@ -45,6 +45,7 @@ async function fetchOnce(url: string): Promise<string> {
   }
   const r = await fetch(`/api/public/playlist?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(90000) });
   const text = await r.text();
+  if (r.headers.get("X-Relay-Error")) throw new Error(friendly(502, ""));
   if (!r.ok || /^\s*</.test(text)) throw new Error(friendly(r.ok ? 200 : r.status, text));
   return text;
 }
