@@ -52,23 +52,50 @@ function Index() {
   useEffect(() => {
     let m = "";
     let stop = false;
+    let shown = "";
     let timer: ReturnType<typeof setTimeout>;
+    const ACT = "ctl-last-activation";
+    // Opens the catalog from what the panel answered last time, so a reopened
+    // app goes straight to the menu instead of waiting for the panel again.
+    const open = async (a: Activation) => {
+      const key = JSON.stringify([a.xtream, a.url]);
+      if (key === shown) return true;
+      if (a.xtream) { shown = key; setCatalog(preload(organized(xtreamCatalog(a.xtream)))); return true; }
+      setMsg("Carregando lista...");
+      const text = await cached(`m3u:${a.url}`, () => fetchText(a.url!));
+      if (text.includes("#EXTINF")) { shown = key; setCatalog(preload(organized(m3uCatalog(text)))); return true; }
+      return false;
+    };
     const check = async () => {
       try {
         if (!m) { m = await getDeviceMac(); setMac(m); }
         const a = (await (await fetch(`/api/public/activate?mac=${encodeURIComponent(m)}`)).json()) as Activation;
         if (a.active) {
+          localStorage.setItem(ACT, JSON.stringify(a));
           setExpires(a.expires ?? null);
-          if (a.xtream) { setCatalog(preload(organized(xtreamCatalog(a.xtream)))); return; }
-          setMsg("Carregando lista...");
-          const text = await cached(`m3u:${a.url}`, () => fetchText(a.url!));
-          if (text.includes("#EXTINF")) { setCatalog(preload(organized(m3uCatalog(text)))); return; }
+          if (await open(a)) return;
           setMsg("A lista liberada está vazia ou inválida.");
-        } else setMsg(a.error ?? "Aguardando liberação no painel");
-      } catch (e) { setMsg(e instanceof Error ? e.message : "Sem conexão. Tentando novamente..."); }
+        } else {
+          localStorage.removeItem(ACT);
+          if (shown) { shown = ""; setCatalog(null); }
+          setMsg(a.error ?? "Aguardando liberação no painel");
+        }
+      } catch (e) {
+        if (shown) return; // offline/slow panel: keep using the saved list
+        setMsg(e instanceof Error ? e.message : "Sem conexão. Tentando novamente...");
+      }
       if (!stop) timer = setTimeout(check, 15000);
     };
-    check();
+    (async () => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(ACT) ?? "null") as Activation | null;
+        if (saved?.active && (!saved.expires || new Date(saved.expires) > new Date())) {
+          m = await getDeviceMac(); setMac(m); setExpires(saved.expires ?? null);
+          await open(saved);
+        }
+      } catch { /* no saved activation */ }
+      void check();
+    })();
     return () => { stop = true; clearTimeout(timer); };
   }, []);
 
