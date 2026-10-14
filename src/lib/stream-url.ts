@@ -23,11 +23,20 @@ export function playbackPlan(raw: string, pageIsHttps: boolean, native: boolean,
   const url = playableUrl(src, pageIsHttps, native);
   const out: Attempt[] = [];
   const add = (a: Attempt) => { if (!out.some((o) => o.url === a.url && o.engine === a.engine)) out.push(a); };
-  if (!isHlsUrl(url)) add({ url, engine: "element" });
-  else if (native) {
+  // Browser on an https page: first ask the IPTV server directly over https from
+  // the customer's own connection (servers block our relay's datacenter IP).
+  const direct = playableUrl(src, false, true);
+  const secure = !native && pageIsHttps && direct.startsWith("http://") ? direct.replace(/^http:/, "https:") : null;
+  if (!isHlsUrl(url)) {
+    if (secure) add({ url: secure, engine: "element" });
+    add({ url, engine: "element" });
+  } else if (native) {
     if (nativeHls) add({ url, engine: "element" });
     add({ url, engine: "hls" });
     if (src !== url) add({ url: src, engine: "element" }); // original .ts link
-  } else add({ url, engine: "hls" });
+  } else {
+    if (secure) { add({ url: secure, engine: "hls" }); if (nativeHls) add({ url: secure, engine: "element" }); }
+    add({ url, engine: "hls" });
+  }
   return out;
 }
