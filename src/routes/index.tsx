@@ -5,7 +5,7 @@ import { getDeviceMac } from "@/lib/device";
 import { fetchText } from "@/lib/transport";
 import { cached } from "@/lib/cache";
 import { organized } from "@/lib/organize";
-import { m3uCatalog, xtreamCatalog, type Catalog, type Xtream } from "@/lib/catalog";
+import { m3uCatalog, xtreamCatalog, xtreamFromUrl, type Catalog, type Xtream } from "@/lib/catalog";
 import { focusFirst, useBack, useRemoteNavigation } from "@/lib/remote";
 import { LiveView, PosterView } from "@/components/tv/Browse";
 import { SupportView } from "@/components/tv/Support";
@@ -60,7 +60,8 @@ function Index() {
     const open = async (a: Activation) => {
       const key = JSON.stringify([a.xtream, a.url]);
       if (key === shown) return true;
-      if (a.xtream) { shown = key; setCatalog(preload(organized(xtreamCatalog(a.xtream)))); return true; }
+      const x = a.xtream ?? xtreamFromUrl(a.url);
+      if (x) { shown = key; setCatalog(preload(organized(xtreamCatalog(x)))); return true; }
       setMsg("Carregando lista...");
       const text = await cached(`m3u:${a.url}`, () => fetchText(a.url!));
       if (text.includes("#EXTINF")) { shown = key; setCatalog(preload(organized(m3uCatalog(text)))); return true; }
