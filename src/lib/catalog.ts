@@ -37,6 +37,18 @@ export function decodeB64(s: string): string {
 type Row = Record<string, unknown>;
 const str = (v: unknown) => (v == null ? "" : String(v));
 
+// A panel "m3u" link like http://srv/get.php?username=U&password=P is an Xtream
+// server. Using its API loads each menu separately (small, fast) instead of one
+// giant file with every channel, movie and episode, which hangs weak devices.
+export function xtreamFromUrl(url: string | undefined): Xtream | null {
+  try {
+    const l = new URL(url ?? "");
+    const username = l.searchParams.get("username"), password = l.searchParams.get("password");
+    if (!/\/(get|player_api)\.php$/i.test(l.pathname) || !username || !password) return null;
+    return { server: l.origin + l.pathname.replace(/\/[^/]*$/, ""), username, password };
+  } catch { return null; }
+}
+
 export function xtreamCatalog(x: Xtream): Catalog {
   const base = x.server.replace(/\/+$/, "");
   const u = encodeURIComponent(x.username), p = encodeURIComponent(x.password);
