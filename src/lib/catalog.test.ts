@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { sectionOf, decodeB64, m3uCatalog } from "./catalog";
+import { sectionOf, decodeB64, m3uCatalog, xtreamFromUrl } from "./catalog";
 
 describe("catalog", () => {
   it("sorts M3U entries into live, movies and series", () => {
@@ -15,5 +15,14 @@ describe("catalog", () => {
     const c = m3uCatalog('#EXTM3U\n#EXTINF:-1 group-title="Esportes",A\nhttp://s/live/u/p/1.ts\n#EXTINF:-1 group-title="Ação",B\nhttp://s/movie/u/p/2.mp4');
     expect(await c.categories("live")).toEqual([{ id: "Esportes", name: "Esportes" }]);
     expect((await c.items("movie")).map((i) => i.name)).toEqual(["B"]);
+  });
+  it("reads Xtream login from a panel get.php link", () => {
+    expect(xtreamFromUrl("http://diamondmax.click/get.php?username=ab1&password=x9&type=m3u_plus&output=m3u8"))
+      .toEqual({ server: "http://diamondmax.click", username: "ab1", password: "x9" });
+    expect(xtreamFromUrl("http://s.com:8080/get.php?username=a&password=b")?.server).toBe("http://s.com:8080");
+  });
+  it("keeps plain m3u links as m3u", () => {
+    expect(xtreamFromUrl("http://s.com/lista.m3u")).toBeNull();
+    expect(xtreamFromUrl("http://s.com/get.php?type=m3u")).toBeNull();
   });
 });
