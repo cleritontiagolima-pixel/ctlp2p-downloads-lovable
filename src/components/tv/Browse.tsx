@@ -67,6 +67,15 @@ function useSection(catalog: Catalog, section: Section) {
   return { cats, items, cat, setCat, q, setQ, count, visible };
 }
 
+// Channel logo, or the channel's initials when the list has none / it fails to load.
+function ChannelLogo({ src, name }: { src?: string | undefined; name: string }) {
+  const [bad, setBad] = useState(false);
+  useEffect(() => setBad(false), [src]);
+  const initials = name.replace(/\b(FHD|HD|SD|4K|UHD|H265|HEVC)\b/gi, "").trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  if (src && !bad) return <img src={src} alt="" loading="lazy" onError={() => setBad(true)} className="h-8 w-10 shrink-0 rounded bg-muted/40 object-contain sm:h-9 sm:w-12" />;
+  return <div className="grid h-8 w-10 shrink-0 place-items-center rounded bg-primary/15 text-[0.65rem] font-bold text-primary sm:h-9 sm:w-12 sm:text-xs">{initials || "TV"}</div>;
+}
+
 const fmt = (t: number) => new Date(t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 export function LiveView({ catalog, onBack }: { catalog: Catalog; onBack: () => void }) {
@@ -86,6 +95,7 @@ export function LiveView({ catalog, onBack }: { catalog: Catalog; onBack: () => 
 
   const now = Date.now();
   const onAir = epg.find((p) => p.start <= now && p.end > now);
+  const next = epg.find((p) => p.start >= (onAir?.end ?? now));
 
   return (
     <div className="flex h-full portrait:flex-col">
@@ -100,7 +110,7 @@ export function LiveView({ catalog, onBack }: { catalog: Catalog; onBack: () => 
               onClick={() => (current?.id === c.id ? setFull(true) : setCurrent(c))}
               className={`mb-1 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm ${navCls} ${current?.id === c.id ? "bg-accent" : "hover:bg-accent/60"}`}>
               <span className="w-6 shrink-0 text-right text-xs text-muted-foreground sm:w-8">{i + 1}</span>
-              {c.icon ? <img src={c.icon} alt="" loading="lazy" className="h-8 w-10 shrink-0 rounded object-contain sm:h-9 sm:w-12" /> : <div className="h-8 w-10 shrink-0 rounded bg-muted sm:h-9 sm:w-12" />}
+              <ChannelLogo src={c.icon} name={c.name} />
               <span className="truncate">{c.name}</span>
             </button>
           ))}
@@ -115,7 +125,11 @@ export function LiveView({ catalog, onBack }: { catalog: Catalog; onBack: () => 
         {current && (
           <div>
             <h3 className="truncate text-base font-bold sm:text-xl">{current.name}</h3>
-            <p className="text-xs text-muted-foreground">OK novamente para tela cheia</p>
+            <div className="mt-1 space-y-0.5 text-xs sm:text-sm">
+              <p className="truncate"><span className="font-bold text-primary">AGORA: </span>{onAir ? `${fmt(onAir.start)} ${onAir.title}` : "Programação não informada"}</p>
+              <p className="truncate text-muted-foreground"><span className="font-bold">A SEGUIR: </span>{next ? `${fmt(next.start)} ${next.title}` : "—"}</p>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Toque/OK novamente para tela cheia</p>
           </div>
         )}
         <div className="rounded-xl border border-border bg-card p-4 portrait:hidden">

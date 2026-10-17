@@ -55,7 +55,7 @@ export function xtreamCatalog(x: Xtream): Catalog {
   const api = memo(async (q: string) => {
     const load = async () => JSON.parse(await fetchText(`${base}/player_api.php?username=${u}&password=${p}&action=${q}`)) as unknown;
     // Program guide changes all the time; the big lists are kept on the device.
-    return q.startsWith("get_short_epg") ? load() : cached(`x:${base}:${x.username}:${q}`, load);
+    return /^get_(short_epg|simple_data_table)/.test(q) ? load() : cached(`x:${base}:${x.username}:${q}`, load);
   });
   const catAction = { live: "get_live_categories", movie: "get_vod_categories", series: "get_series_categories" };
   const itemAction = { live: "get_live_streams", movie: "get_vod_streams", series: "get_series" };
@@ -90,11 +90,16 @@ export function xtreamCatalog(x: Xtream): Catalog {
       return out.sort((a, b) => Number(a.season) - Number(b.season) || a.num - b.num);
     },
     async epg(item) {
-      const r = (await api(`get_short_epg&stream_id=${encodeURIComponent(item.id)}&limit=8`)) as { epg_listings?: Row[] };
-      return (r.epg_listings ?? []).map((e) => ({
+      const id = encodeURIComponent(item.id);
+      const read = (r: unknown) => ((r as { epg_listings?: Row[] } | null)?.epg_listings ?? []).map((e) => ({
         title: decodeB64(str(e["title"])), desc: decodeB64(str(e["description"])),
-        start: Number(e["start_timestamp"]) * 1000, end: Number(e["stop_timestamp"]) * 1000,
-      }));
+        start: Number(e["start_timestamp"]) * 1000, end: Number(e["stop_timestamp"] ?? e["end_timestamp"]) * 1000,
+      })).filter((p) => p.title && p.end > Date.now());
+      const short = read(await api(`get_short_epg&stream_id=${id}&limit=10`).catch(() => null));
+      if (short.length) return short;
+      // Some panels only answer the full-day table.
+      return read(await api(`get_simple_data_table&stream_id=${id}`).catch(() => null))
+        .sort((a, b) => a.start - b.start).slice(0, 10);
     },
     liveUrl: (i) => `${base}/live/${u}/${p}/${i.id}.m3u8`,
     movieUrl: (i) => `${base}/movie/${u}/${p}/${i.id}.${i.ext ?? "mp4"}`,

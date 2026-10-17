@@ -105,13 +105,13 @@ function Index() {
   const back = () => { setScreen("home"); };
   if (screen === "home")
     return (
-      <main className="dark h-[100dvh] overflow-hidden bg-background text-foreground">
+      <main className="dark h-[100dvh] overflow-hidden bg-background pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] text-foreground">
         <Home mac={mac} expires={expires} onOpen={setScreen} />
         <UpdatePrompt />
       </main>
     );
   return (
-    <main className="dark flex h-[100dvh] flex-col overflow-hidden bg-background text-foreground">
+    <main className="dark flex h-[100dvh] flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] text-foreground">
       <TopNav screen={screen} onOpen={setScreen} />
       <UpdatePrompt />
       <div className="min-h-0 flex-1">

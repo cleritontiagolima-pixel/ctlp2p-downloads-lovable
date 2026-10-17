@@ -3,14 +3,14 @@
 // 1) Native app (Capacitor APK): native HTTP, no CORS/mixed-content limits.
 // 2) Browser: direct fetch when allowed. 3) Last resort: server relay.
 type NativeHttp = {
-  get(o: { url: string; responseType?: string }): Promise<{ status: number; data: unknown }>;
+  get(o: { url: string; responseType?: string }): Promise<{ status: number; data: unknown; url?: string }>;
 };
 
 type CapacitorGlobal = {
   Capacitor?: { isNativePlatform?: () => boolean; Plugins?: { CapacitorHttp?: NativeHttp } };
 };
 
-function nativeHttp(): NativeHttp | undefined {
+export function nativeHttp(): NativeHttp | undefined {
   const cap = (globalThis as unknown as CapacitorGlobal).Capacitor;
   return cap?.isNativePlatform?.() ? cap.Plugins?.CapacitorHttp : undefined;
 }

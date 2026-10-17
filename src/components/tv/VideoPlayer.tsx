@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import Hls from "hls.js";
+import Hls, { type HlsConfig } from "hls.js";
 import { ArrowLeft } from "lucide-react";
 import { playbackPlan } from "@/lib/stream-url";
 import { isNativeApp } from "@/lib/transport";
 import { isBackKey } from "@/lib/remote";
+import { NativePlaylistLoader } from "@/lib/hls-native-loader";
+
+const NO_PICTURE = "Este aparelho não exibe a imagem desta versão do canal. Tente a versão HD ou SD.";
 
 type Props = { src: string; title: string; live: boolean; full: boolean; onClose?: () => void };
 
@@ -24,6 +27,7 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
     let hls: Hls | null = null;
     let step = 0;
     let dead = false;
+    let noPicture = false;
     let stall: ReturnType<typeof setTimeout> | undefined;
     let openTimer: ReturnType<typeof setTimeout> | undefined;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -33,7 +37,9 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
     const total = plan.length * 2;
     const fail = () => {
       if (dead) return;
-      clearTimeout(openTimer); clearTimeout(retryTimer);
+      clearTimeout(openTimer); clearTimeout(retryTimer); clearTimeout(stall);
+      // Picture problem on the last way left: keep the sound and explain.
+      if (noPicture && step + 1 >= total) { setStatus(NO_PICTURE); return; }
       step++;
       if (step < total) { setStatus("Reconectando..."); retryTimer = setTimeout(start, 700); }
       else { hls?.destroy(); hls = null; setStatus("Conteúdo indisponível no momento."); }
@@ -48,6 +54,7 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
       openTimer = setTimeout(() => { if (v.readyState < 3) fail(); }, 15000);
       if (a.engine === "hls" && Hls.isSupported()) {
         hls = new Hls({
+          ...(native ? { pLoader: NativePlaylistLoader as unknown as NonNullable<HlsConfig["pLoader"]> } : {}),
           enableWorker: true, startLevel: 0, startFragPrefetch: true, capLevelToPlayerSize: true,
           abrEwmaDefaultEstimate: 500_000, maxBufferLength: live ? 30 : 60, maxMaxBufferLength: 120,
           backBufferLength: 15, liveSyncDurationCount: 3, liveMaxLatencyDurationCount: 8,
@@ -64,15 +71,28 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
       } else v.src = a.url;
       v.play().catch(() => {});
     };
+    // "Waiting" that never ends means this way of playing is stuck: jump to the next.
+    let lastTime = -1;
     const onWaiting = () => {
       setStatus("Ajustando à sua internet...");
       clearTimeout(stall);
+      lastTime = v.currentTime;
       stall = setTimeout(() => {
         if (hls) { hls.nextLevel = 0; if (live && hls.liveSyncPosition) v.currentTime = hls.liveSyncPosition; }
-        else if (live) start();
+        stall = setTimeout(() => { if (v.currentTime === lastTime) fail(); }, 8000);
       }, 6000);
     };
-    const onPlaying = () => { clearTimeout(stall); clearTimeout(openTimer); setStatus(""); };
+    // Audio but black picture: the device can't decode this video (often H.265).
+    let picture: ReturnType<typeof setTimeout> | undefined;
+    const onPlaying = () => {
+      clearTimeout(stall); clearTimeout(openTimer); setStatus("");
+      clearTimeout(picture);
+      picture = setTimeout(() => {
+        if (!dead && !v.paused && v.videoWidth === 0 && v.videoHeight === 0) {
+          noPicture = true; fail();
+        }
+      }, 4000);
+    };
     const onError = () => { if (!hls) fail(); };
     v.addEventListener("waiting", onWaiting);
     v.addEventListener("playing", onPlaying);
@@ -80,7 +100,7 @@ export function VideoPlayer({ src, title, live, full, onClose }: Props) {
     start();
     return () => {
       dead = true;
-      clearTimeout(stall); clearTimeout(openTimer); clearTimeout(retryTimer);
+      clearTimeout(stall); clearTimeout(openTimer); clearTimeout(retryTimer); clearTimeout(picture);
       v.removeEventListener("waiting", onWaiting);
       v.removeEventListener("playing", onPlaying);
       v.removeEventListener("error", onError);
